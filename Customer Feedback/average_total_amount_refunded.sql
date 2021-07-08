@@ -50,5 +50,5 @@ where v.global_entity_id = 'FP_PK'
   and o.created_date_local between start_date and end_date
   and o.decline_reason.title in ("No rider available","Customer received food in inedible condition","Customer received food totally spilled","Customer received order too late (>1h)","Customer received wrong order","Outside of delivery area","Rider accident","Rider unreachable","Unable to find or reach customer")
 )
-select sum(value)
+select sum(value) / count(distinct code)
 from final_vouchers where code in (select code from inaccurate_orders)
