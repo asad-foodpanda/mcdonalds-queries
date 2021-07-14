@@ -43,8 +43,10 @@ where a.is_marked_for_testing_training = false
 
 data as (
   select 
+  format_date("%B %Y", o.created_date_local) as month,
   count(distinct case when o.is_valid_order then o.code end) as valid_orders,
-  count(distinct o.pd_customer_uuid) as existing_customers
+  count(distinct o.pd_customer_uuid) as existing_customers,
+  safe_divide(count(distinct case when o.is_valid_order then o.code end), count(distinct o.pd_customer_uuid)) as orders_per_customer
   from `fulfillment-dwh-production.pandata_curated.pd_orders` o
   join `fulfillment-dwh-production.pandata_curated.pd_vendors` v
     on o.vendor_code = v.vendor_code and o.global_entity_id = v.global_entity_id 
@@ -53,8 +55,9 @@ data as (
     and v.chain_code in unnest(chains)
     and o.created_date_local between start_date and end_date
     and o.pd_customer_uuid not in (select pd_customer_uuid from new_customers)
+    group by 1
 )
 
 
-
-select valid_orders / 3 / existing_customers  as average_orders_per_month from data
+select avg(orders_per_customer) from data
+-- select valid_orders / 3 / existing_customers  as average_orders_per_month from data
